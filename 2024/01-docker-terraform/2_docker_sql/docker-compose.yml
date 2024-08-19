@@ -1,0 +1,60 @@
+services:
+  database:
+    image: postgres:13
+    container_name: ny_taxi_db
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+      - POSTGRES_DB=new_york_taxi
+    ports:
+      - "5432:5432"
+    networks:
+      - ny_taxi
+    volumes:
+      - "./data/postgres/new_york_taxi_db:/var/lib/postgresql/data:rw"
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pg_admin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=data.eng@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    ports:
+      - '8080:80'
+    networks:
+      - ny_taxi
+  yellow_taxi_trip_ingestion:
+    image: taxi_ingest:v01
+    container_name: yellow_taxi_data_ingestion
+    command:  # Command to run within the container
+      - --user=root
+      - --password=root
+      - --db_name=new_york_taxi
+      - --table_name=yellow_taxi_trip
+      - --host=ny_taxi_db
+      - --port=5432
+      - --url=https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet
+      - --chunk_size=100000
+    networks:
+      - ny_taxi
+    depends_on:
+      - database
+  taxi_zones_ingestion:
+    image: taxi_ingest:v01
+    container_name: taxi_zones_data_ingestion
+    command: 
+      - --user=root
+      - --password=root
+      - --db_name=new_york_taxi
+      - --table_name=zones
+      - --host=ny_taxi_db
+      - --port=5432
+      - --url=https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv
+      - --chunk_size=100000
+    networks:
+      - ny_taxi
+    depends_on:
+      - database
+networks:
+  ny_taxi:
+    driver: bridge
+
