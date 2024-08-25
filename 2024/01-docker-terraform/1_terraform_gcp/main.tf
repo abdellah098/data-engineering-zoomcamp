@@ -7,16 +7,15 @@ terraform {
   }
 }
 
-# set GOOGLE_CREDENTIAS env variable 
 provider "google" {
-  project = "terraform-demo-433517"
-  region  = "europe-west9-a"
+  credentials = file(var.credentials)
+  project     = var.project
+  region      = var.region
 }
 
-
 resource "google_storage_bucket" "demo-bucket" {
-  name          = "terraform-demo-433517-terra-bucket"
-  location      = "EUROPE-WEST9"
+  name          = var.bucket
+  location      = var.location
   force_destroy = true
 
   lifecycle_rule {
@@ -28,3 +27,9 @@ resource "google_storage_bucket" "demo-bucket" {
     }
   }
 }
+
+resource "google_bigquery_dataset" "dataset" {
+  dataset_id = var.big-query-name
+  location   = var.location
+}
+
