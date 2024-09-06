@@ -2,6 +2,8 @@
 2024/01-docker-terraform/2_docker_sql/data/*
 2024/01-docker-terraform/2_docker_sql/venv/*
 
+2024/01-docker-terraform/home_work/venv/*
+2024/01-docker-terraform/home_work/data/postgres/*
 
 # Terraform
 # Local .terraform directories
