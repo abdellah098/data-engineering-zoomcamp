@@ -66,5 +66,61 @@ The yellow taxi trip and zones data are putting in postgres using a script.
   --network=data_ingestion_network \
   taxi_ingest:v01 --db_user=root --password=root --db_name=taxi_trip --host=pg_database --port=5432
   ```
+### Question 3. Count records
+15612 taxi trips were  made on September 18th 2019
 
+```
+SELECT COUNT(*)
+FROM yellow_taxi_trip
+WHERE DATE(lpep_pickup_datetime) = '2019-09-18' AND DATE(lpep_dropoff_datetime) = '2019-09-18';
+```
+### Question 4. Longest trip for each day
+The query select the pick up day with the longest trip distance.
+```
+SELECT
+	lpep_dropoff_datetime,
+	lpep_pickup_datetime,
+	CAST(lpep_dropoff_datetime AS TIMESTAMP) - CAST(lpep_pickup_datetime AS TIMESTAMP) AS spent_time,
+	EXTRACT(EPOCH FROM (CAST(lpep_dropoff_datetime AS TIMESTAMP) - CAST(lpep_pickup_datetime AS TIMESTAMP))) AS spent_time_in_seconds
+FROM yellow_taxi_trip
+WHERE DATE(lpep_pickup_datetime) = DATE(lpep_dropoff_datetime)
+ORDER BY EXTRACT(EPOCH FROM (CAST(lpep_dropoff_datetime AS TIMESTAMP) - CAST(lpep_pickup_datetime AS TIMESTAMP))) DESC
+LIMIT 1;
+```
 
+### Question 5. Three biggest pick up Boroughs
+
+"Brooklyn" "Manhattan" "Queens"
+
+```
+SELECT dropoff_zone."Borough"
+
+FROM yellow_taxi_trip taxi_trip
+INNER JOIN zones dropoff_zone ON taxi_trip."DOLocationID" = dropoff_zone."LocationID"
+
+WHERE DATE(lpep_pickup_datetime) = '2019-09-18' AND (
+dropoff_zone."Borough" IS NOT NULL AND dropoff_zone."Borough" <> 'Unknow'
+)
+
+GROUP BY dropoff_zone."Borough" 
+HAVING sum(total_amount) > 50000
+```
+
+### Question 6. Largest tip
+JFK Airport
+
+``` 
+SELECT dropoff_zone."Zone"
+
+FROM yellow_taxi_trip taxi_trip
+INNER JOIN zones pickup_zone ON taxi_trip."PULocationID" = pickup_zone."LocationID"
+INNER JOIN zones dropoff_zone ON taxi_trip."DOLocationID" = dropoff_zone."LocationID"
+
+WHERE EXTRACT(YEAR FROM CAST(lpep_pickup_datetime AS TIMESTAMP)) = 2019 AND
+      EXTRACT(MONTH FROM CAST(lpep_pickup_datetime AS TIMESTAMP)) = 9
+	  AND pickup_zone."Zone" = 'Astoria'
+	  
+ORDER BY tip_amount DESC
+
+LIMIT 1;
+```
